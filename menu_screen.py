@@ -30,7 +30,7 @@ class CursedMenu(object):
         screen_thread.daemon = True
         screen_thread.start()
         self.screen.clear()
-        self.show(["water","look","garden","instructions"], title=' botany ', subtitle='options')
+        self.show(["water","look","garden","instructions","set score to 9000"], title=' botany ', subtitle='options')
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -453,6 +453,8 @@ available in the readme :)
             except Exception as exception:
                 self.screen.refresh()
                 # traceback.print_exc()
+	if request == "set score to 9000":
+		self.plant.ticks = 9000
 
     def __exit__(self):
         self.exit = True
