@@ -1,9 +1,15 @@
 # botany
-![Screencap](http://tilde.town/~curiouser/botanybeta2.png)
 
-by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
+A hacked client for a game called botany, where you water and nurture a plant.
 
-A command line, realtime, community plant buddy.
+Current hacks:
+ - Set your score in the game to 9000
+
+Original game by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
+
+Original README is as follows:
+
+"A command line, realtime, community plant buddy.
 
 You've been given a seed that will grow into a beautiful plant.
 Check in and water your plant every 24h to keep it growing. 5 days without water = death. Your plant depends on you to live!
@@ -66,4 +72,4 @@ If your plant goes 5 days without water, it will die!
 
 ## credits
 * thank you tilde.town for inspiration!
-* Thank you @etkirsch for [this gist](https://gist.github.com/etkirsch/53505478f53aeeac24a5) - python curses can be nightmarish!
+* Thank you @etkirsch for [this gist](https://gist.github.com/etkirsch/53505478f53aeeac24a5) - python curses can be nightmarish!"
