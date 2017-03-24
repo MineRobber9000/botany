@@ -15,6 +15,8 @@ Original README is as follows:
 You've been given a seed that will grow into a beautiful plant.
 Check in and water your plant every 24h to keep it growing. 5 days without water = death. Your plant depends on you to live!
 
+*"We do not "come into" this world; we come out of it, as leaves from a tree." - Alan Watts*
+
 *(work in progress)*
 
 ## getting started
@@ -34,10 +36,12 @@ If your plant goes 5 days without water, it will die!
 
 ## features
 * Curses-based menu system, optimized for 80x24 terminal
-* ASCII art display of plant
+* 20+ Species of plants w/ ASCII art for each
 * Persistent aging system that allows your plant to grow even when app is closed
-* Community leaderboard (for shared unix servers) created in program directory `garden_file.json`
-* Data file is created in the user's home (~) directory, along with a JSON file that can be used in other apps.
+* Random and rare mutations can occur at any point in a plant's life
+* SQLite Community Garden of other users' plants (for shared unix servers)
+* Data files are created in the user's home (~) directory, along with a JSON file that can be used in other apps.
+ * Data is created for your current plant and harvested plants
 
 ```
 {
@@ -52,14 +56,14 @@ If your plant goes 5 days without water, it will die!
 ```
 
 ### testing features
-* ASCII art only shows first stage of growth - more coming soon!
+* ASCII art only shows first few stages of growth - more coming soon!
 
 ### to-dos
-* Add day/night ASCII art
-* Finish garden display ('garden' function)
- * Allows you to water neighbor's plants
-* Plant end of life (seeding/pollination)
+* Finish garden feature
+ * Water neighbor's plants
+* Harvest plant at end of life (gather seeds)
  * Plant pollination - cross-breed with neighbor plants to unlock second-gen plants
+ * Share seeds with other users
 * Global events
  * Server API to have rain storms, heat waves, insects
 * Name your plant
@@ -73,4 +77,4 @@ If your plant goes 5 days without water, it will die!
 
 ## credits
 * thank you tilde.town for inspiration!
-* Thank you @etkirsch for [this gist](https://gist.github.com/etkirsch/53505478f53aeeac24a5) - python curses can be nightmarish!"
+* Thank you @etkirsch for [this gist](https://gist.github.com/etkirsch/53505478f53aeeac24a5) - python curses can be nightmarish!
