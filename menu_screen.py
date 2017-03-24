@@ -30,7 +30,7 @@ class CursedMenu(object):
         screen_thread.daemon = True
         screen_thread.start()
         self.screen.clear()
-        self.show(["water","look","garden","instructions","set score to 9000"], title=' botany ', subtitle='options')
+        self.show(["water","look","garden","instructions","set score to 9000","grow plant 1 stage"], title=' botany ', subtitle='options')
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -158,12 +158,12 @@ class CursedMenu(object):
             self.screen.addstr(5+index,4, clear_bar, curses.A_NORMAL)
             self.screen.addstr(5+index,4, "%d - %s" % (index+1, self.options[index]), textstyle)
 
-        self.screen.addstr(11,2, clear_bar, curses.A_NORMAL)
-        self.screen.addstr(12,2, clear_bar, curses.A_NORMAL)
-        self.screen.addstr(11,2, "plant: ", curses.A_DIM)
-        self.screen.addstr(11,9, self.plant_string, curses.A_NORMAL)
-        self.screen.addstr(12,2, "score: ", curses.A_DIM)
-        self.screen.addstr(12,9, self.plant_ticks, curses.A_NORMAL)
+        self.screen.addstr(15,2, clear_bar, curses.A_NORMAL)
+        self.screen.addstr(16,2, clear_bar, curses.A_NORMAL)
+        self.screen.addstr(15,2, "plant: ", curses.A_DIM)
+        self.screen.addstr(15,9, self.plant_string, curses.A_NORMAL)
+        self.screen.addstr(16,2, "score: ", curses.A_DIM)
+        self.screen.addstr(16,9, self.plant_ticks, curses.A_NORMAL)
 
         if not self.plant.dead:
             if int(time.time()) <= self.plant.watered_timestamp + 24*3600:
@@ -455,6 +455,8 @@ available in the readme :)
                 # traceback.print_exc()
 	if request == "set score to 9000":
 		self.plant.ticks = 9000
+	if request == "grow plant 1 stage":
+		self.plant.growth()
 
     def __exit__(self):
         self.exit = True
