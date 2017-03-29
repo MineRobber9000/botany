@@ -5,6 +5,7 @@ A hacked client for a game called botany, where you water and nurture a plant.
 Current hacks:
  - Set your score in the game to 9000.
  - Advance your plant by one growth stage.
+ - Bring your plant back from the dead.
 
 Original game by Jake Funke - jifunks@gmail.com - tilde.town/~curiouser - http://jakefunke.online/
 

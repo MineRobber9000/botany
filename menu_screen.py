@@ -33,7 +33,7 @@ class CursedMenu(object):
         screen_thread.daemon = True
         screen_thread.start()
         self.screen.clear()
-        self.show(["water","look","garden","instructions","set score to 9000","grow plant 1 stage"], title=' botany ', subtitle='options')
+        self.show(["water","look","garden","instructions","set score to 9000","grow plant 1 stage","bring plant back from the dead"], title=' botany ', subtitle='options')
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -511,6 +511,9 @@ available in the readme :)
 		self.plant.ticks = 9000
 	if request == "grow plant 1 stage":
 		self.plant.growth()
+	if request == "bring plant back from the dead":
+		self.plant.dead = False
+		self.plant.watered_timestamp = time.time()
 
     def __exit__(self):
         self.exit = True
