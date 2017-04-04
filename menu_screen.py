@@ -462,7 +462,7 @@ available in the readme :)
             info_text = info_text.splitlines()
 
         for y, line in enumerate(info_text, 2):
-            self.screen.addstr(y+12, 2, line, curses.A_NORMAL)
+            self.screen.addstr(y+20, 2, line, curses.A_NORMAL)
         self.screen.refresh()
 
     def harvest_confirmation(self):
