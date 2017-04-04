@@ -4,6 +4,7 @@ import traceback
 import threading
 import time
 import random
+import math
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -172,18 +173,24 @@ class CursedMenu(object):
         self.screen.addstr(20, 9, self.plant_ticks, curses.A_NORMAL)
 
         if not self.plant.dead:
-            if int(time.time()) <= self.plant.watered_timestamp + 24*3600:
-                self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
-                self.screen.addstr(5,13, " - plant watered today :)", curses.A_NORMAL)
-            else:
-                self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
+            water_gauge_str = self.water_gauge()
+            self.screen.addstr(5,14, water_gauge_str, curses.A_NORMAL)
         else:
             self.screen.addstr(5,13, clear_bar, curses.A_NORMAL)
-            self.screen.addstr(5,13, " - you can't water a dead plant :(", curses.A_NORMAL)
+            self.screen.addstr(5,13, " (   RIP   )", curses.A_NORMAL)
 
-        # This draws cute ascii from files
+        # draw cute ascii from files
         self.draw_plant_ascii(self.plant)
         # self.ascii_render("sun.txt",-2,self.maxx-14)
+
+    def water_gauge(self):
+        # build nice looking water gauge
+        water_left_pct = 1 - ((time.time() - self.plant.watered_timestamp)/86400)
+        # don't allow negative value
+        water_left_pct = max(0, water_left_pct)
+        water_left = int(math.ceil(water_left_pct * 10))
+        water_string = "(" + (")" * water_left) + ("." * (10 - water_left)) + ") " + str(int(water_left_pct * 100)) + "% "
+        return water_string
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
