@@ -1,10 +1,12 @@
 import curses
+import math
 import os
 import traceback
 import threading
 import time
 import random
-import math
+
+overflow = False # set to True to enable growth past final stage (softcorrupts plant file)
 
 class CursedMenu(object):
     #TODO: name your plant
@@ -14,9 +16,15 @@ class CursedMenu(object):
         self.initialized = False
         self.screen = curses.initscr()
         curses.noecho()
-        curses.cbreak()
+        curses.raw()
         curses.start_color()
-        curses.curs_set(0)
+        try:
+            curses.curs_set(0)
+        except curses.error:
+            # Not all terminals support this functionality.
+            # When the error is ignored the screen will look a little uglier, but that's not terrible
+            # So in order to keep botany as accesible as possible to everyone, it should be safe to ignore the error.
+            pass
         self.screen.keypad(1)
         self.plant = this_plant
         self.user_data = this_data
@@ -26,7 +34,7 @@ class CursedMenu(object):
         self.infotoggle = 0
         self.maxy, self.maxx = self.screen.getmaxyx()
         # Highlighted and Normal line definitions
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        self.define_colors()
         self.highlighted = curses.color_pair(1)
         self.normal = curses.A_NORMAL
         # Threaded screen update for live changes
@@ -34,7 +42,18 @@ class CursedMenu(object):
         screen_thread.daemon = True
         screen_thread.start()
         self.screen.clear()
-        self.show(["water","look","garden","instructions","set score to 9000","grow plant 1 stage","bring plant back from the dead"], title=' botany ', subtitle='options')
+        self.show(["water","look","garden","instructions","set score to 9000","grow plant 1 stage","bring plant back from dead"], title=' botany ', subtitle='options')
+
+    def define_colors(self):
+        # set curses color pairs manually
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+        curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(7, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(8, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
@@ -47,8 +66,6 @@ class CursedMenu(object):
         self.draw_menu()
 
     def update_options(self):
-        # TODO: should this have separate options if plant dies vs plant is
-        # last stage?
         # Makes sure you can get a new plant if it dies
         if self.plant.dead:
             if "harvest" not in self.options:
@@ -69,7 +86,6 @@ class CursedMenu(object):
 
     def draw(self):
         # Draw the menu and lines
-        # TODO: display refresh is hacky. Could be more precise
         self.screen.refresh()
         try:
             self.draw_default()
@@ -138,15 +154,20 @@ class CursedMenu(object):
             20: 'palm',
         }
 
-        if this_plant.stage == 0:
+        if this_plant.dead == True:
+            self.ascii_render('rip.txt', ypos, xpos)
+        elif this_plant.stage == 0:
             self.ascii_render('seed.txt', ypos, xpos)
         elif this_plant.stage == 1:
             self.ascii_render('seedling.txt', ypos, xpos)
         elif this_plant.stage == 2:
             this_filename = plant_art_dict[this_plant.species]+'1.txt'
             self.ascii_render(this_filename, ypos, xpos)
-        elif this_plant.stage >= 3:
+        elif this_plant.stage == 3 or this_plant.stage == 5:
             this_filename = plant_art_dict[this_plant.species]+'2.txt'
+            self.ascii_render(this_filename, ypos, xpos)
+        elif this_plant.stage == 4:
+            this_filename = plant_art_dict[this_plant.species]+'3.txt'
             self.ascii_render(this_filename, ypos, xpos)
 
     def draw_default(self):
@@ -172,6 +193,7 @@ class CursedMenu(object):
         self.screen.addstr(20, 2, "score: ", curses.A_DIM)
         self.screen.addstr(20, 9, self.plant_ticks, curses.A_NORMAL)
 
+        # display fancy water gauge
         if not self.plant.dead:
             water_gauge_str = self.water_gauge()
             self.screen.addstr(5,14, water_gauge_str, curses.A_NORMAL)
@@ -181,7 +203,6 @@ class CursedMenu(object):
 
         # draw cute ascii from files
         self.draw_plant_ascii(self.plant)
-        # self.ascii_render("sun.txt",-2,self.maxx-14)
 
     def water_gauge(self):
         # build nice looking water gauge
@@ -191,6 +212,7 @@ class CursedMenu(object):
         water_left = int(math.ceil(water_left_pct * 10))
         water_string = "(" + (")" * water_left) + ("." * (10 - water_left)) + ") " + str(int(water_left_pct * 100)) + "% "
         return water_string
+
 
     def update_plant_live(self):
         # updates plant data on menu screen, live!
@@ -208,7 +230,7 @@ class CursedMenu(object):
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
-        ## DEBUG KEYS - enable to see curses key codes
+        ## DEBUG KEYS - enable these lines to see curses key codes
         # self.screen.addstr(1, 1, str(user_in), curses.A_NORMAL)
         # self.screen.refresh()
 
@@ -227,6 +249,8 @@ class CursedMenu(object):
         # this is a number; check to see if we can set it
         if user_in >= ord('1') and user_in <= ord(str(min(9,len(self.options)+1))):
             self.selected = user_in - ord('0') - 1 # convert keypress back to a number, then subtract 1 to get index
+            if self.selected > len(self.options):
+                self.selected = len(self.options)-1 # prevent choosing option outside of bounds
             return
 
         # increment or Decrement
@@ -238,7 +262,7 @@ class CursedMenu(object):
         if user_in in up_keys: # up arrow
             self.selected -=1
 
-        # modulo to wrap around
+        # modulo to wrap menu cursor
         self.selected = self.selected % len(self.options)
         return
 
@@ -249,10 +273,13 @@ class CursedMenu(object):
             if this_garden[plant_id]:
                 if not this_garden[plant_id]["dead"]:
                     this_plant = this_garden[plant_id]
-                    plant_table += this_plant["owner"] + " - "
-                    plant_table += this_plant["age"] + " - "
-                    plant_table += str(this_plant["score"]) + "p - "
-                    plant_table += this_plant["description"] + "\n"
+                    entry = "{:14} - {:>16} - {:>8}p - {}\n".format(
+                        this_plant["owner"],
+                        this_plant["age"],
+                        this_plant["score"],
+                        this_plant["description"]
+                    )
+                    plant_table += entry
         # build list of n entries per page
         entries_per_page = self.maxy - 16
         garden_list = plant_table.splitlines()
@@ -288,9 +315,6 @@ class CursedMenu(object):
                 # Clear page before drawing next
                 self.clear_info_pane()
                 self.infotoggle = 0
-                self.screen.refresh()
-            else:
-                self.screen.refresh()
 
     def get_plant_description(self, this_plant):
         output_text = ""
@@ -315,7 +339,7 @@ class CursedMenu(object):
             "The seedling shakes in the wind.",
             "You can make out a tiny leaf - or is that a thorn?",
             "You can feel the seedling looking back at you.",
-            "You kiss your seedling good night.",
+            "You blow a kiss to your seedling.",
             "You think about all the seedlings who came before it.",
             "You and your seedling make a great team.",
             "Your seedling grows slowly and quietly.",
@@ -410,7 +434,6 @@ class CursedMenu(object):
 
         # if young plant
         if this_stage == 2:
-            # TODO: more descriptive rarity
             if this_plant.rarity >= 2:
                 rarity_hint = "You feel like your plant is special."
                 output_text += rarity_hint + ".\n"
@@ -432,25 +455,27 @@ class CursedMenu(object):
         if self.infotoggle != 1:
             # get plant description before printing
             output_string = self.get_plant_description(this_plant)
+            growth_multiplier = 1 + (0.2 * (this_plant.generation-1))
+            output_string += "Generation: {}\nGrowth rate: {}".format(self.plant.generation, growth_multiplier)
             self.draw_info_text(output_string)
             self.infotoggle = 1
         else:
             # otherwise just set toggle
             self.infotoggle = 0
 
-
     def draw_instructions(self):
         # Draw instructions on screen
         self.clear_info_pane()
         if self.infotoggle != 4:
-            instructions_txt = """welcome to botany. you've been given a seed
-that will grow into a beautiful plant. check
-in and water your plant every 24h to keep it
-growing. 5 days without water = death. your
-plant depends on you to live! more info is
-available in the readme :)
-                               cheers,
-                               curio"""
+            instructions_txt = ("welcome to botany. you've been given a seed\n"
+                                "that will grow into a beautiful plant. check\n"
+                                "in and water your plant every 24h to keep it\n"
+                                "growing. 5 days without water = death. your\n"
+                                "plant depends on you to live! more info is\n"
+                                "available in the readme :)\n"
+                                "                               cheers,\n"
+                                "                               curio\n"
+                                )
             self.draw_info_text(instructions_txt)
             self.infotoggle = 4
         else:
@@ -465,24 +490,31 @@ available in the readme :)
         self.screen.refresh()
 
     def draw_info_text(self, info_text):
+        # print lines of text to info pane at bottom of screen
         if type(info_text) is str:
             info_text = info_text.splitlines()
 
         for y, line in enumerate(info_text, 2):
-            self.screen.addstr(y+20, 2, line, curses.A_NORMAL)
+            self.screen.addstr(y+12, 2, line, curses.A_NORMAL)
         self.screen.refresh()
 
     def harvest_confirmation(self):
         self.clear_info_pane()
         # get plant description before printing
-        harvest_text = "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
+        max_stage = len(self.plant.stage_dict) - 1
+        harvest_text = ""
+        if not self.plant.dead:
+            if self.plant.stage == max_stage:
+                harvest_text += "Congratulations! You raised your plant to its final stage of growth.\n"
+                harvest_text += "Your next plant will grow at a speed of: {}x\n".format(1 + (0.2 * self.plant.generation))
+        harvest_text += "If you harvest your plant you'll start over from a seed.\nContinue? (Y/n)"
         self.draw_info_text(harvest_text)
         try:
             user_in = self.screen.getch() # Gets user input
         except Exception as e:
             self.__exit__()
 
-        if user_in == ord('Y'):
+        if user_in in [ord('Y'), ord('y')]:
             self.plant.start_over()
         else:
             pass
@@ -492,7 +524,6 @@ available in the readme :)
         # Menu options call functions here
         if request == None: return
         if request == "harvest":
-            #TODO: should harvest be separate from dead plant start over?
             self.harvest_confirmation()
         if request == "water":
             self.plant.water()
@@ -517,7 +548,10 @@ available in the readme :)
 	if request == "set score to 9000":
 		self.plant.ticks = 9000
 	if request == "grow plant 1 stage":
+		oldstage = self.plant.stage
 		self.plant.growth()
+		if overflow and self.plant.stage == oldstage:
+			self.plant.stage += 1
 	if request == "bring plant back from the dead":
 		self.plant.dead = False
 		self.plant.watered_timestamp = time.time()
